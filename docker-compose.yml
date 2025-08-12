@@ -3,15 +3,15 @@ version: '3.8'
 services:
   db:
     image: postgres:16-alpine 
-    restart: always # Ensures the container restarts if it stops
+    restart: always 
     environment:
-      POSTGRES_DB: mydatabase # Sets the default database name
-      POSTGRES_USER: myuser # Sets the PostgreSQL username
-      POSTGRES_PASSWORD: mypassword # Sets the PostgreSQL password
+      POSTGRES_DB: brasileirao 
+      POSTGRES_USER: myuser 
+      POSTGRES_PASSWORD: mypassword 
     ports:
-      - "5432:5432" # Maps host port 5432 to container port 5432
+      - "5432:5432" 
     volumes:
-      - db_data:/var/lib/postgresql/data # Persists data to a named volume
+      - db_data:/var/lib/postgresql/data 
 
 volumes:
-  db_data: # Defines the named volume for data persistence
+  db_data: 
