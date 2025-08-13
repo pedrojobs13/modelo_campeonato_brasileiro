@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 import numpy as np
 
-# Planilha de cartões 
+ 
 def connectDatabase():
     try: 
         conn = postgres.connect(database="brasileirao",
@@ -16,6 +16,7 @@ def connectDatabase():
     except postgres.Error as e:
         print(f"Error connecting to PostgreSQL: {e}") 
 
+# Planilha de cartões
 def returnCartoesCsv():
     pathCartoes = 'planilhas/campeonato-brasileiro-cartoes.csv'
     colNames = ("partida_id", "rodata", "clube", "cartao", "atleta", "num_camisa", "posicao", "minuto")
@@ -94,6 +95,105 @@ def insertDatasInGolsDatabasse(cursor):
     for _, row in golsCsv.iterrows():
         cursor.execute(insert_sql, tuple(row))
 
+
+# Planilha full
+def returnFullCsv():
+    pathFull = 'planilhas/campeonato-brasileiro-full.csv'
+    colNames = ("ID", "rodata", "data","hora","mandante","visitante","formacao_mandante","formacao_visitante", 
+                "tecnico_visitante", "vencedor","arena","mandante_Placar","visitante_Placar","mandante_Estado","visitante_Estado")
+    table_name = "dados_completo"
+    fullCsv= pd.read_csv(pathFull, names=colNames,header=None, skiprows=1)
+    return fullCsv
+
+def createFullDatabaseIfNotExist(cursor):
+    colNames = ("ID", "rodata", "data","hora","mandante","visitante","formacao_mandante","formacao_visitante", "tecnico_mandante",
+                "tecnico_visitante", "vencedor","arena","mandante_Placar","visitante_Placar","mandante_Estado","visitante_Estado")
+    table_name = "dados_completo"
+    fullCsv = returnFullCsv()
+    
+    create_table_sql = f"""
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            id_database SERIAL PRIMARY KEY,
+            {colNames[0]} VARCHAR(100) NOT NULL,
+            {colNames[1]} VARCHAR(100) NOT NULL,
+            {colNames[2]} VARCHAR(100),
+            {colNames[3]} VARCHAR(100),
+            {colNames[4]} VARCHAR(100),
+            {colNames[5]} VARCHAR(100),
+            {colNames[6]} VARCHAR(100),
+            {colNames[7]} VARCHAR(100),
+            {colNames[8]} VARCHAR(100),
+            {colNames[9]} VARCHAR(100),
+            {colNames[10]} VARCHAR(100),
+            {colNames[11]} VARCHAR(100),
+            {colNames[12]} VARCHAR(100),
+            {colNames[13]} VARCHAR(100),
+            {colNames[14]} VARCHAR(100),
+            {colNames[15]} VARCHAR(100)
+        )    
+    """
+    cursor.execute(create_table_sql)
+
+def insertDatasInFullDatabasse(cursor):
+    table_name = "dados_completo"
+    fullCsv = returnFullCsv()
+    fullCsv.replace(np.nan, None, inplace=True)
+
+    columns = [col.replace(" ", "_") for col in fullCsv.columns]
+    placeholders = ", ".join(["%s"] * len(columns))
+    insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+
+    for _, row in fullCsv.iterrows():
+        cursor.execute(insert_sql, tuple(row))
+
+#Planilha estatisticas
+def returnEstatisticasCsv():
+    pathestatistica = 'planilhas/campeonato-brasileiro-estatisticas-full.csv'
+    colNames = ("partida_id", "rodata", "clube", "chutes", "chutes_no_alvo", "posse_de_bola", "passes", 
+                "precisao_passes", "faltas", "cartao_amarelo", "cartao_vermelho", "impedimentos", "escanteios")
+    table_name = "estatistica"
+    estatisticaCsv= pd.read_csv(pathestatistica, names=colNames,header=None, skiprows=1)
+    return estatisticaCsv
+
+def createEstatisticasDatabaseIfNotExist(cursor):
+    colNames = ("partida_id", "rodata", "clube", "chutes", "chutes_no_alvo", "posse_de_bola", "passes", 
+                "precisao_passes", "faltas", "cartao_amarelo", "cartao_vermelho", "impedimentos", "escanteios")
+    table_name = "estatistica"
+    estatisticaCsv = returnEstatisticasCsv()
+    
+    create_table_sql = f"""
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            id SERIAL PRIMARY KEY,
+            {colNames[0]} VARCHAR(100) NOT NULL,
+            {colNames[1]} VARCHAR(100) NOT NULL,
+            {colNames[2]} VARCHAR(100),
+            {colNames[3]} VARCHAR(100),
+            {colNames[4]} VARCHAR(100),
+            {colNames[5]} VARCHAR(100),
+            {colNames[6]} VARCHAR(100),
+            {colNames[7]} VARCHAR(100),
+            {colNames[8]} VARCHAR(100),
+            {colNames[9]} VARCHAR(100),
+            {colNames[10]} VARCHAR(100),
+            {colNames[11]} VARCHAR(100),
+            {colNames[12]} VARCHAR(100)
+        )    
+    """
+    cursor.execute(create_table_sql)
+
+def insertDatasInEstatisticasDatabasse(cursor):
+    table_name = "estatistica"
+    estatisticaCsv = returnEstatisticasCsv()
+    estatisticaCsv.replace(np.nan, None, inplace=True)
+
+    columns = [col.replace(" ", "_") for col in estatisticaCsv.columns]
+    placeholders = ", ".join(["%s"] * len(columns))
+    insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+    
+    for _, row in estatisticaCsv.iterrows():
+
+        cursor.execute(insert_sql, tuple(row))
+
 def main():
     load_dotenv()
     conn = connectDatabase()
@@ -105,7 +205,13 @@ def main():
         createGolsDatabaseIfNotExist(conn.cursor())
         insertDatasInGolsDatabasse(conn.cursor())
 
+        createFullDatabaseIfNotExist(conn.cursor())
+        insertDatasInFullDatabasse(conn.cursor())
+
+        createEstatisticasDatabaseIfNotExist(conn.cursor())
+        insertDatasInEstatisticasDatabasse(conn.cursor())
+
         conn.commit()
         conn.close()
-        
+
 main()
