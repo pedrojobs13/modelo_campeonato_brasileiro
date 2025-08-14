@@ -169,9 +169,9 @@ def createEstatisticasDatabaseIfNotExist(cursor):
             {colNames[2]} VARCHAR(100),
             {colNames[3]} integer,
             {colNames[4]} integer,
-            {colNames[5]} VARCHAR(100),
+            {colNames[5]} integer,
             {colNames[6]} integer,
-            {colNames[7]} VARCHAR(100),
+            {colNames[7]} integer,
             {colNames[8]} integer,
             {colNames[9]} integer,
             {colNames[10]} integer,
@@ -186,6 +186,9 @@ def insertDatasInEstatisticasDatabasse(cursor):
     estatisticaCsv = returnEstatisticasCsv()
     estatisticaCsv.replace(np.nan, None, inplace=True)
 
+    estatisticaCsv['precisao_passes'] = estatisticaCsv['precisao_passes'].str.replace(r'%', '', regex=True)
+    estatisticaCsv['posse_de_bola'] = estatisticaCsv['posse_de_bola'].str.replace(r'%', '', regex=True)
+    
     columns = [col.replace(" ", "_") for col in estatisticaCsv.columns]
     placeholders = ", ".join(["%s"] * len(columns))
     insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"

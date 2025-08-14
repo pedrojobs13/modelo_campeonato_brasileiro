@@ -5,7 +5,7 @@ services:
     image: postgres:16-alpine 
     restart: always 
     environment:
-      POSTGRES_DB: brasileirao 
+      POSTGRES_DB: brasileirao, brasileirao_star
       POSTGRES_USER: myuser 
       POSTGRES_PASSWORD: mypassword 
     ports:
