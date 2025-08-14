@@ -126,8 +126,8 @@ def createFullDatabaseIfNotExist(cursor):
             {colNames[9]} VARCHAR(100),
             {colNames[10]} VARCHAR(100),
             {colNames[11]} VARCHAR(100),
-            {colNames[12]} VARCHAR(100),
-            {colNames[13]} VARCHAR(100),
+            {colNames[12]} integer,
+            {colNames[13]} integer,
             {colNames[14]} VARCHAR(100),
             {colNames[15]} VARCHAR(100)
         )    
@@ -167,16 +167,16 @@ def createEstatisticasDatabaseIfNotExist(cursor):
             {colNames[0]} VARCHAR(100) NOT NULL,
             {colNames[1]} VARCHAR(100) NOT NULL,
             {colNames[2]} VARCHAR(100),
-            {colNames[3]} VARCHAR(100),
-            {colNames[4]} VARCHAR(100),
+            {colNames[3]} integer,
+            {colNames[4]} integer,
             {colNames[5]} VARCHAR(100),
-            {colNames[6]} VARCHAR(100),
+            {colNames[6]} integer,
             {colNames[7]} VARCHAR(100),
-            {colNames[8]} VARCHAR(100),
-            {colNames[9]} VARCHAR(100),
-            {colNames[10]} VARCHAR(100),
-            {colNames[11]} VARCHAR(100),
-            {colNames[12]} VARCHAR(100)
+            {colNames[8]} integer,
+            {colNames[9]} integer,
+            {colNames[10]} integer,
+            {colNames[11]} integer,
+            {colNames[12]} integer
         )    
     """
     cursor.execute(create_table_sql)
