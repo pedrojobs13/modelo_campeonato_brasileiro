@@ -6,15 +6,14 @@ import numpy as np
  
 def connectDatabase():
     try: 
-        conn = postgres.connect(database="brasileirao_star",
+        conn = postgres.connect(database="brasileirao",
                         host=os.getenv("HOST"),
                         user=os.getenv("DATABASEUSER"),
                         password=os.getenv("PASSWORD"),
                         port=os.getenv("PORT"))
         return conn
     except postgres.Error as e:
-        print(f"Error connecting to PostgreSQL: {e}") 
-
+        print(f"Error connecting to PostgreSQL: {e}")     
 
 def createTables(cursor):
      
@@ -101,12 +100,75 @@ def createTables(cursor):
     for table in tables:
         cursor.execute(table)
 
+
+def insertDim_partida(cursor):
+    
+    insert_table_sql = f""" 
+    INSERT INTO dim_partida (partida_id_origem, descricao_partida, vencedor)
+        SELECT DISTINCT
+        id,
+        CONCAT(mandante, ' vs ', visitante),
+        -- Lógica para substituir o '-' por 'Empate'
+        CASE
+            WHEN vencedor = '-' THEN 'Empate'
+            ELSE vencedor
+        END AS vencedor_tratado
+    FROM dados_completo
+    """
+    cursor.execute(insert_table_sql)
+
+def insertDim_arena(cursor):
+    
+    insert_table_sql = f""" 
+        INSERT INTO dim_arena (nome_arena)
+        SELECT DISTINCT arena FROM dados_completo
+    """
+    cursor.execute(insert_table_sql)
+
+def insertDim_tecnico(cursor):
+    insert_table_sql = f""" 
+        INSERT INTO dim_tecnico (nome_tecnico)
+        SELECT DISTINCT tecnico_mandante FROM dados_completo
+        UNION
+        SELECT DISTINCT tecnico_visitante FROM dados_completo;
+    """
+    cursor.execute(insert_table_sql)
+
+def insertDim_tempo(cursor):
+    insert_table_sql = f""" 
+    INSERT INTO dim_tempo (data_partida, hora_partida, rodada, dia, mes, ano, dia_da_semana)
+        SELECT DISTINCT
+            TO_DATE(data, 'DD/MM/YYYY'),
+            TO_TIMESTAMP(hora, 'HH24:MI:SS')::TIME,
+            CAST(rodata AS INTEGER),
+            EXTRACT(DAY FROM TO_DATE(data, 'DD/MM/YYYY')),
+            EXTRACT(MONTH FROM TO_DATE(data, 'DD/MM/YYYY')),
+            EXTRACT(YEAR FROM TO_DATE(data, 'DD/MM/YYYY')),
+            TO_CHAR(TO_DATE(data, 'DD/MM/YYYY'), 'Day')
+    FROM dados_completo
+    """
+    cursor.execute(insert_table_sql)
+
+def insertDim_clube(cursor):
+    insert_table_sql = f""" 
+        INSERT INTO dim_clube (nome_clube, estado_clube)
+        SELECT DISTINCT mandante, mandante_estado FROM dados_completo
+        UNION
+        SELECT DISTINCT visitante, visitante_estado FROM dados_completo;
+    """
+    cursor.execute(insert_table_sql)  
+      
 def main():
     load_dotenv()
     conn = connectDatabase()
-    
+
     if conn:
         createTables(conn.cursor())
+        insertDim_partida(conn.cursor())
+        insertDim_arena(conn.cursor())
+        insertDim_tecnico(conn.cursor())
+        insertDim_tempo(conn.cursor())
+        insertDim_clube(conn.cursor())
         conn.commit()
         conn.close()
 main()

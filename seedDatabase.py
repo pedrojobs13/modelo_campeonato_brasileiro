@@ -99,15 +99,12 @@ def insertDatasInGolsDatabasse(cursor):
 # Planilha full
 def returnFullCsv():
     pathFull = 'planilhas/campeonato-brasileiro-full.csv'
-    colNames = ("ID", "rodata", "data","hora","mandante","visitante","formacao_mandante","formacao_visitante", 
-                "tecnico_visitante", "vencedor","arena","mandante_Placar","visitante_Placar","mandante_Estado","visitante_Estado")
-    table_name = "dados_completo"
+    colNames = ("ID","rodata","data","hora","mandante","visitante","formacao_mandante","formacao_visitante","tecnico_mandante","tecnico_visitante","vencedor","arena","mandante_Placar","visitante_Placar","mandante_Estado","visitante_Estado")
     fullCsv= pd.read_csv(pathFull, names=colNames,header=None, skiprows=1)
     return fullCsv
 
 def createFullDatabaseIfNotExist(cursor):
-    colNames = ("ID", "rodata", "data","hora","mandante","visitante","formacao_mandante","formacao_visitante", "tecnico_mandante",
-                "tecnico_visitante", "vencedor","arena","mandante_Placar","visitante_Placar","mandante_Estado","visitante_Estado")
+    colNames = ("ID","rodata","data","hora","mandante","visitante","formacao_mandante","formacao_visitante","tecnico_mandante","tecnico_visitante","vencedor","arena","mandante_Placar","visitante_Placar","mandante_Estado","visitante_Estado")
     table_name = "dados_completo"
     fullCsv = returnFullCsv()
     
@@ -138,8 +135,10 @@ def insertDatasInFullDatabasse(cursor):
     table_name = "dados_completo"
     fullCsv = returnFullCsv()
     fullCsv.replace(np.nan, None, inplace=True)
-
+    fullCsv['arena'] = fullCsv['arena'].str.replace('\xa0', '')
+    
     columns = [col.replace(" ", "_") for col in fullCsv.columns]
+    print(columns)
     placeholders = ", ".join(["%s"] * len(columns))
     insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
 
