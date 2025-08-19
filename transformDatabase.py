@@ -158,6 +158,52 @@ def insertDim_clube(cursor):
     """
     cursor.execute(insert_table_sql)  
       
+def insertFato(cursor):
+    insert_table_sql = f""" 
+            INSERT INTO fato_desempenho_partida (
+                id_partida_sk, id_tempo_sk, id_clube_sk, id_clube_adversario_sk, id_tecnico_sk, id_arena_sk,
+                gols_marcados, gols_sofridos, resultado,
+                chutes, chutes_no_alvo, posse_de_bola, passes, precisao_passes, faltas,
+                cartoes_amarelos, cartoes_vermelhos, impedimentos, escanteios
+            )
+            SELECT
+                p.id_partida_sk,
+                t.id_tempo_sk,
+                c_mandante.id_clube_sk,
+                c_visitante.id_clube_sk,
+                tec.id_tecnico_sk,
+                a.id_arena_sk,
+
+                origem.mandante_placar,
+                origem.visitante_placar,
+                CASE
+                    WHEN origem.vencedor = origem.mandante THEN 'V'
+                    WHEN origem.vencedor = '-' THEN 'E'
+                    ELSE 'D'
+                END,
+                est.chutes,
+                est.chutes_no_alvo,
+                est.posse_de_bola,
+                est.passes,
+                est.precisao_passes,
+                est.faltas,
+                est.cartao_amarelo,
+                est.cartao_vermelho,
+                est.impedimentos,
+                est.escanteios
+            FROM
+                dados_completo AS origem
+            JOIN estatistica AS est ON origem.id = est.partida_id AND origem.mandante = est.clube
+            JOIN dim_partida p ON origem.id = p.partida_id_origem
+            JOIN dim_tempo t ON TO_DATE(origem.data, 'DD/MM/YYYY') = t.data_partida AND CAST(origem.rodata AS INTEGER) = t.rodada
+            JOIN dim_clube c_mandante ON origem.mandante = c_mandante.nome_clube
+            JOIN dim_clube c_visitante ON origem.visitante = c_visitante.nome_clube
+            JOIN dim_tecnico tec ON origem.tecnico_mandante = tec.nome_tecnico
+            JOIN dim_arena a ON origem.arena = a.nome_arena;
+    """
+    cursor.execute(insert_table_sql)       
+      
+    
 def main():
     load_dotenv()
     conn = connectDatabase()
@@ -169,6 +215,7 @@ def main():
         insertDim_tecnico(conn.cursor())
         insertDim_tempo(conn.cursor())
         insertDim_clube(conn.cursor())
+        insertFato(conn.cursor())
         conn.commit()
         conn.close()
 main()
